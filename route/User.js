@@ -12,6 +12,6 @@ const verifyToken = require("../Middleware/verifyToken");
 router.post("/send-otp", sendOTP);
 router.post("/register", register);
 router.post("/login", login);
-router.get("/me", verifyToken, getCurrentUser); // 🔒 Protected route
+router.get("/me", verifyToken, getCurrentUser);
 
 module.exports = router;

@@ -49,25 +49,20 @@ exports.getLocation = async (req, res) => {
 
 exports.getLocationByUserId = async (req, res) => {
   try {
-    const token = req.headers.authorization?.split(" ")[1];
-    if (!token) {
-      return res.status(401).json({ message: "Token missing" });
+   console.log("hitting")
+    const {userId} = req.params;
+
+    console.log("userid", userId)
+
+    const user = await User.findOne({userId});
+    if (!user) {
+      console.log("User Not Found")
+      return res.status(403).json({ message: "User Not Found" });
     }
-
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-    // Check if token userId matches requested userId
-    if (decoded.userId !== req.params.userId) {
-      return res.status(403).json({ message: "User ID mismatch" });
-    }
-
-    const user = await User.findOne({ userId: req.params.userId });
-    if (!user || user.phoneNumber !== decoded.phoneNumber) {
-      return res.status(403).json({ message: "Phone number mismatch" });
-    }
-
-    const location = await Location.findOne({ userId: req.params.userId });
+console.log("user", user)
+    const location = await Location.findOne(userId);
     if (!location) {
+       console.log("location Not Found")
       return res.status(404).json({ message: "Location not found" });
     }
 
