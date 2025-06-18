@@ -49,23 +49,17 @@ exports.getLocation = async (req, res) => {
 
 exports.getLocationByUserId = async (req, res) => {
   try {
-   console.log("hitting")
     const {userId} = req.params;
-
-    console.log("userid", userId)
-
     const user = await User.findOne({userId});
     if (!user) {
-      console.log("User Not Found")
+    
       return res.status(403).json({ message: "User Not Found" });
     }
-console.log("user", user)
-    const location = await Location.findOne(userId);
+     const location = await Location.findOne({ userId: userId.toString() });
+    
     if (!location) {
-       console.log("location Not Found")
       return res.status(404).json({ message: "Location not found" });
     }
-
     res.status(200).json({ location });
   } catch (error) {
     res.status(500).json({ message: "Server error" });

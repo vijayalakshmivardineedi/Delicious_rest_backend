@@ -32,7 +32,7 @@ exports.createOrder = async (req, res) => {
     const order = new Order(orderData);
     await order.save();
 
-    res.json({ message: "Order placed successfully", order });
+    res.status(200).json({ message: "Order placed successfully", order });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -40,10 +40,69 @@ exports.createOrder = async (req, res) => {
 
 exports.getOrderById = async (req, res) => {
   try {
-    const order = await Order.findOne({ orderId: req.params.orderId });
+    const {orderId} = req.params;
+    const order = await Order.findById(orderId);
     if (!order) return res.status(404).json({ message: "Order not found" });
-    res.json(order);
+    res.status(200).json(order);
   } catch (error) {
     res.status(500).json({ error: error.message });
+  }
+};
+
+exports.getOrderByUserId = async (req, res) => {
+  try {
+    const {userId} = req.params;
+    const orders = await Order.find({userId: userId});
+    if (!orders) return res.status(404).json({ message: "Order not found" });
+    res.status(200).json(orders);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.cancleByUser = async (req, res) => {
+  try {
+    const {userId, orderId} = req.params;
+
+    const order = await Order.findOne({userId: userId, orderId: orderId});
+    if (!order) return res.status(404).json({ message: "User or Order not found" });
+
+ if (order.status !== "Ordered") return res.status(404).json({ message: "Order Cancel Not Posible"});
+    order.status = "Cancelled";
+      await order.save();
+    res.status(200).json({message: "Order Canceled"});
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+////admins
+
+exports.getAllOrdersForAdmin = async (req, res) => {
+  try {
+    const orders = await Order.find();
+    if (!orders || orders.length === 0) {
+      return res.status(404).json({ message: "No orders found" });
+    }
+    res.status(200).status(200).json(orders);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.adminStatusUpdate = async (req, res) => {
+  try {
+    const {orderId, status} = req.params;
+    const order = await Order.findOne({orderId: orderId});
+
+    if (!order) return res.status(404).json({ message: "Order not found" });
+
+    if (order.status === "Cancelled") return res.status(404).json({ message: `Order ${status} Not Possible`});
+      order.status = status;
+      await order.save();
+    
+    res.status(200).status(200).json({message: `Order ${status} Successfully`});
+  } catch (error) {
+    res.status(500).json({ error: error.message, message:"Order has been Cancled." });
   }
 };

@@ -21,7 +21,11 @@ const orderSchema = new mongoose.Schema({
       validator: v => /^\d{4}$/.test(v),
       message: props => `${props.value} is not a valid 4-digit order ID!`
     }
-  }
+  },
+  paymentMethod: {type: String, required: true, enum:["Online", "Cash"]},
+  status: {type: String, required: true, 
+    enum:["Ordered", "Cancelled", "Rejected", "Approved", "Preparing","Onway", "Delevered"]},
+  rating:{type: String}
 });
 
 module.exports = mongoose.model("Order", orderSchema);
