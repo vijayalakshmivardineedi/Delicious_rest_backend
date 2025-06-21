@@ -15,6 +15,13 @@ exports.sendOTP = async (req, res) => {
   const { phone } = req.body;
   if (!phone) return res.status(400).json({ message: "Phone is required" });
 
+    const UserPhone = await User.findOne({phone});
+      if (!UserPhone) {
+      
+        return res.status(403).json({ message: "Phone Number Already registered" });
+      }
+
+
   const formattedPhone = `+91${normalizePhone(phone)}`;
 
   try {
