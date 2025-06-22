@@ -2,6 +2,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const path = require("path"); 
+const cloudinary = require("cloudinary").v2;
 require("dotenv").config();
 
 const userRoutes = require("./route/User");
@@ -34,6 +35,20 @@ app.use("/api/coupon", Coupons);
 mongoose.connect(process.env.MONGODB_URI)
   .then(() => console.log("Connected to MongoDB successfully."))
   .catch((err) => console.error("Error connecting to MongoDB:", err));
+
+
+  cloudinary.config({
+  cloud_name: `${process.env.CLOUD_NAME}`,
+  api_key: `${process.env.CLOUD_API_KEY}`,
+  api_secret: `${process.env.CLOUD_API_SECRET}`,
+});
+cloudinary.api.ping((err, result) => {
+  if (err) {
+    console.error("Cloudinary Connection Failed:", err);
+  } else {
+    console.log("Cloudinary Connected Successfully");
+  }
+});
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
