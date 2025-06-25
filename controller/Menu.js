@@ -1,208 +1,282 @@
-const Menu = require("../model/Menu");
-const multer = require("multer");
-const cloudinary = require("cloudinary").v2;
-const path = require("path");
-const fs = require("fs");
+// const Menu = require("../model/Menu");
+// const multer = require("multer");
+// const cloudinary = require("cloudinary").v2;
+// const path = require("path");
+// const fs = require("fs");
 
-// Delete uploaded image file
-// const deleteImageFile = (filename) => {
-//   if (!filename) return;
-//   const filePath = path.join(__dirname, "../uploads", filename);
-//   if (fs.existsSync(filePath)) {
-//     fs.unlinkSync(filePath);
-//   }
-// };
+// // Delete uploaded image file
+// // const deleteImageFile = (filename) => {
+// //   if (!filename) return;
+// //   const filePath = path.join(__dirname, "../uploads", filename);
+// //   if (fs.existsSync(filePath)) {
+// //     fs.unlinkSync(filePath);
+// //   }
+// // };
 
-// // Multer setup
-// const storage = multer.diskStorage({
-//   destination: (req, file, cb) => {
-//     cb(null, "uploads/");
-//   },
-//   filename: (req, file, cb) => {
-//     cb(null, Date.now() + path.extname(file.originalname));
-//   },
+// // // Multer setup
+// // const storage = multer.diskStorage({
+// //   destination: (req, file, cb) => {
+// //     cb(null, "uploads/");
+// //   },
+// //   filename: (req, file, cb) => {
+// //     cb(null, Date.now() + path.extname(file.originalname));
+// //   },
+// // });
+// // const upload = multer({ storage });
+// // exports.upload = upload;
+
+// // // GET all menu categories
+// // exports.getAllMenus = async (req, res) => {
+// //   try {
+// //     const menus = await Menu.find();
+// //     res.status(200).json(menus);
+// //   } catch (err) {
+// //     res
+// //       .status(500)
+// //       .json({ message: "Failed to fetch menus", error: err.message });
+// //   }
+// // };
+
+// // // POST create new category
+// // exports.createCategory = async (req, res) => {
+// //   try {
+// //     const { name } = req.body;
+// //     const newCategory = new Menu({ name, items: [] });
+// //     await newCategory.save();
+// //     res.status(201).json({ message: "Category created", data: newCategory });
+// //   } catch (err) {
+// //     res
+// //       .status(500)
+// //       .json({ message: "Failed to create category", error: err.message });
+// //   }
+// // };
+
+// // // POST /api/menu/:categoryId/addItem
+// // exports.addItemToCategory = async (req, res) => {
+// //   try {
+// //     const { categoryId } = req.params;
+// //     const { itemName, itemCost, isEnabled } = req.body;
+// //     const image = req.file ? req.file.filename : null;
+
+// //     const category = await Menu.findById(categoryId);
+// //     if (!category)
+// //       return res.status(404).json({ message: "Category not found" });
+
+// //     category.items.push({
+// //       itemName,
+// //       itemCost,
+// //       image,
+// //       isEnabled: isEnabled !== undefined ? isEnabled : true,
+// //     });
+
+// //     await category.save();
+// //     res.status(201).json({ message: "Item added", data: category });
+// //   } catch (err) {
+// //     res.status(500).json({ message: "Failed to add item", error: err.message });
+// //   }
+// // };
+
+// // // GET by ID (category or item)
+// // exports.getById = async (req, res) => {
+// //   const { id } = req.params;
+
+// //   try {
+// //     const category = await Menu.findById(id);
+// //     if (category)
+// //       return res.status(200).json({ type: "category", data: category });
+
+// //     const menus = await Menu.find();
+// //     for (const menu of menus) {
+// //       const item = menu.items.id(id);
+// //       if (item) {
+// //         return res
+// //           .status(200)
+// //           .json({ type: "item", data: item, categoryId: menu._id });
+// //       }
+// //     }
+
+// //     res.status(404).json({ message: "Category or item not found" });
+// //   } catch (err) {
+// //     res.status(500).json({ message: "Server error", error: err.message });
+// //   }
+// // };
+
+// // exports.updateCategoryById = async (req, res) => {
+// //   const { id } = req.params;
+// //   const { name, isEnabled } = req.body;
+// //   const image = req.file ? req.file.filename : null;
+
+// //   try {
+// //     const category = await Menu.findById(id);
+// //     if (!category) return res.status(404).json({ message: "Category not found" });
+
+// //     if (image && category.image) deleteImageFile(category.image);
+
+// //     if (name !== undefined) category.name = name;
+// //     if (isEnabled !== undefined) category.isEnabled = isEnabled;
+// //     if (image) category.image = image;
+
+// //     await category.save();
+// //     res.status(200).json({ message: "Category updated", data: category });
+// //   } catch (error) {
+// //     res.status(500).json({ message: "Update error", error: error.message });
+// //   }
+// // };
+
+// // exports.updateItemById = async (req, res) => {
+// //   const { categoryId, itemId } = req.params;
+// //   const { itemName, itemCost, isEnabled } = req.body;
+// //   const image = req.file ? req.file.filename : null;
+
+// //   try {
+// //     const category = await Menu.findById(categoryId);
+// //     if (!category) return res.status(404).json({ message: "Category not found" });
+
+// //     const item = category.items.id(itemId);
+// //     if (!item) return res.status(404).json({ message: "Item not found" });
+
+// //     if (image && item.image) deleteImageFile(item.image);
+
+// //     if (itemName !== undefined) item.itemName = itemName;
+// //     if (itemCost !== undefined) item.itemCost = itemCost;
+// //     if (isEnabled !== undefined) item.isEnabled = isEnabled;
+// //     if (image) item.image = image;
+
+// //     await category.save();
+// //     res.status(200).json({ message: "Item updated", data: item });
+// //   } catch (error) {
+// //     res.status(500).json({ message: "Item update failed", error: error.message });
+// //   }
+// // };
+
+// // exports.deleteCategoryById = async (req, res) => {
+// //   const { id } = req.params;
+// //   try {
+// //     const category = await Menu.findById(id);
+// //     if (!category) {
+// //       return res.status(404).json({ message: "Category not found" });
+// //     }
+
+// //     // Delete all item images
+// //     category.items.forEach((item) => deleteImageFile(item.image));
+
+// //     // Delete category image if exists
+// //     if (category.image) deleteImageFile(category.image);
+
+// //     // Delete category from DB
+// //     await Menu.findByIdAndDelete(id);
+
+// //     res.status(200).json({ message: "Category and its items deleted" });
+// //   } catch (error) {
+// //     res
+// //       .status(500)
+// //       .json({ message: "Category deletion failed", error: error.message });
+// //   }
+// // };
+
+// // exports.deleteItemById = async (req, res) => {
+// //   const { categoryId, itemId } = req.params;
+
+// //   try {
+// //     const category = await Menu.findById(categoryId);
+// //     if (!category) {
+// //       return res.status(404).json({ message: "Category not found" });
+// //     }
+
+// //     const item = category.items.id(itemId);
+// //     if (!item) {
+// //       return res.status(404).json({ message: "Item not found" });
+// //     }
+
+// //     // Delete image if present
+// //     if (item.image) deleteImageFile(item.image);
+
+// //     // Remove item from array
+// //     category.items = category.items.filter(i => i._id.toString() !== itemId);
+
+// //     await category.save();
+
+// //     res.status(200).json({ message: "Item deleted" });
+// //   } catch (error) {
+// //     res.status(500).json({ message: "Item deletion failed", error: error.message });
+// //   }
+// // };
+
+
+
+// cloudinary.config({
+//   cloud_name: process.env.CLOUD_NAME,
+//   api_key: process.env.CLOUD_API_KEY,
+//   api_secret: process.env.CLOUD_API_SECRET,
 // });
-// const upload = multer({ storage });
-// exports.upload = upload;
 
-// // GET all menu categories
-// exports.getAllMenus = async (req, res) => {
+// exports.createMenu = async (req, res) => {
 //   try {
-//     const menus = await Menu.find();
-//     res.status(200).json(menus);
-//   } catch (err) {
-//     res
-//       .status(500)
-//       .json({ message: "Failed to fetch menus", error: err.message });
-//   }
-// };
+//     if (req.uploadError) {
+//       return res.status(400).json({ success: false, message: req.uploadError });
+//     }
 
-// // POST create new category
-// exports.createCategory = async (req, res) => {
-//   try {
-//     const { name } = req.body;
-//     const newCategory = new Menu({ name, items: [] });
-//     await newCategory.save();
-//     res.status(201).json({ message: "Category created", data: newCategory });
-//   } catch (err) {
-//     res
-//       .status(500)
-//       .json({ message: "Failed to create category", error: err.message });
-//   }
-// };
+//     const { itemType, itemCategory, itemName, itemCost } = req.body;
 
-// // POST /api/menu/:categoryId/addItem
-// exports.addItemToCategory = async (req, res) => {
-//   try {
-//     const { categoryId } = req.params;
-//     const { itemName, itemCost, isEnabled } = req.body;
-//     const image = req.file ? req.file.filename : null;
+//     const filePath = req.files.image[0].path;
 
-//     const category = await Menu.findById(categoryId);
-//     if (!category)
-//       return res.status(404).json({ message: "Category not found" });
-
-//     category.items.push({
-//       itemName,
-//       itemCost,
-//       image,
-//       isEnabled: isEnabled !== undefined ? isEnabled : true,
+//     const result = await cloudinary.uploader.upload(filePath, {
+//       folder: "menuItems",
 //     });
 
-//     await category.save();
-//     res.status(201).json({ message: "Item added", data: category });
-//   } catch (err) {
-//     res.status(500).json({ message: "Failed to add item", error: err.message });
+//     fs.unlinkSync(filePath);
+
+// const newItem = new Menu({
+//   itemType,
+//   itemCategory,
+//   itemName,
+//   itemCost,
+//   image: result.secure_url,
+// });
+// await newItem.save();
+
+//     return res.status(200).json({ success: true, data: newItem });
+//   } catch (error) {
+//     return res.status(500).json({ success: false, message: "Something went wrong." });
 //   }
 // };
 
-// // GET by ID (category or item)
-// exports.getById = async (req, res) => {
-//   const { id } = req.params;
 
+// exports.getAllMenu = async (req, res) => {
 //   try {
-//     const category = await Menu.findById(id);
-//     if (category)
-//       return res.status(200).json({ type: "category", data: category });
+//        const menu = await Menu.find();
+//         if (!menu || menu.length === 0) {
+//           return res.status(404).json({ message: "No menu found" });
+//         }
+  
+//     return res.status(200).json({ success: true, menu });
+//   } catch (error) {
+//     return res.status(500).json({ success: false, message: "Something went wrong." });
+//   }
+// };
 
-//     const menus = await Menu.find();
-//     for (const menu of menus) {
-//       const item = menu.items.id(id);
-//       if (item) {
-//         return res
-//           .status(200)
-//           .json({ type: "item", data: item, categoryId: menu._id });
-//       }
+// exports.getRandomMenu = async (req, res) => {
+//   try {
+//     const menu = await Menu.find();
+//     if (!menu || menu.length === 0) {
+//       return res.status(404).json({ message: "No menu found" });
 //     }
 
-//     res.status(404).json({ message: "Category or item not found" });
-//   } catch (err) {
-//     res.status(500).json({ message: "Server error", error: err.message });
-//   }
-// };
+//     console.log("menu")
+//     // Shuffle the array and pick the first 5 items
+//     const shuffled = menu.sort(() => 0.5 - Math.random());
+//     const randomItems = shuffled.slice(0, 5);
 
-// exports.updateCategoryById = async (req, res) => {
-//   const { id } = req.params;
-//   const { name, isEnabled } = req.body;
-//   const image = req.file ? req.file.filename : null;
-
-//   try {
-//     const category = await Menu.findById(id);
-//     if (!category) return res.status(404).json({ message: "Category not found" });
-
-//     if (image && category.image) deleteImageFile(category.image);
-
-//     if (name !== undefined) category.name = name;
-//     if (isEnabled !== undefined) category.isEnabled = isEnabled;
-//     if (image) category.image = image;
-
-//     await category.save();
-//     res.status(200).json({ message: "Category updated", data: category });
+//     return res.status(200).json({ success: true, menu: randomItems });
 //   } catch (error) {
-//     res.status(500).json({ message: "Update error", error: error.message });
-//   }
-// };
-
-// exports.updateItemById = async (req, res) => {
-//   const { categoryId, itemId } = req.params;
-//   const { itemName, itemCost, isEnabled } = req.body;
-//   const image = req.file ? req.file.filename : null;
-
-//   try {
-//     const category = await Menu.findById(categoryId);
-//     if (!category) return res.status(404).json({ message: "Category not found" });
-
-//     const item = category.items.id(itemId);
-//     if (!item) return res.status(404).json({ message: "Item not found" });
-
-//     if (image && item.image) deleteImageFile(item.image);
-
-//     if (itemName !== undefined) item.itemName = itemName;
-//     if (itemCost !== undefined) item.itemCost = itemCost;
-//     if (isEnabled !== undefined) item.isEnabled = isEnabled;
-//     if (image) item.image = image;
-
-//     await category.save();
-//     res.status(200).json({ message: "Item updated", data: item });
-//   } catch (error) {
-//     res.status(500).json({ message: "Item update failed", error: error.message });
-//   }
-// };
-
-// exports.deleteCategoryById = async (req, res) => {
-//   const { id } = req.params;
-//   try {
-//     const category = await Menu.findById(id);
-//     if (!category) {
-//       return res.status(404).json({ message: "Category not found" });
-//     }
-
-//     // Delete all item images
-//     category.items.forEach((item) => deleteImageFile(item.image));
-
-//     // Delete category image if exists
-//     if (category.image) deleteImageFile(category.image);
-
-//     // Delete category from DB
-//     await Menu.findByIdAndDelete(id);
-
-//     res.status(200).json({ message: "Category and its items deleted" });
-//   } catch (error) {
-//     res
-//       .status(500)
-//       .json({ message: "Category deletion failed", error: error.message });
-//   }
-// };
-
-// exports.deleteItemById = async (req, res) => {
-//   const { categoryId, itemId } = req.params;
-
-//   try {
-//     const category = await Menu.findById(categoryId);
-//     if (!category) {
-//       return res.status(404).json({ message: "Category not found" });
-//     }
-
-//     const item = category.items.id(itemId);
-//     if (!item) {
-//       return res.status(404).json({ message: "Item not found" });
-//     }
-
-//     // Delete image if present
-//     if (item.image) deleteImageFile(item.image);
-
-//     // Remove item from array
-//     category.items = category.items.filter(i => i._id.toString() !== itemId);
-
-//     await category.save();
-
-//     res.status(200).json({ message: "Item deleted" });
-//   } catch (error) {
-//     res.status(500).json({ message: "Item deletion failed", error: error.message });
+//     return res.status(500).json({ success: false, message: "Something went wrong." });
 //   }
 // };
 
 
+const Menu = require("../model/Menu");
+const cloudinary = require("cloudinary").v2;
+const fs = require("fs");
 
 cloudinary.config({
   cloud_name: process.env.CLOUD_NAME,
@@ -210,66 +284,241 @@ cloudinary.config({
   api_secret: process.env.CLOUD_API_SECRET,
 });
 
-exports.createMenu = async (req, res) => {
+// GET all menu categories
+exports.getAllMenus = async (req, res) => {
+  try {
+    const menus = await Menu.find();
+    res.status(200).json(menus);
+  } catch (err) {
+    res.status(500).json({ message: "Failed to fetch menus", error: err.message });
+  }
+};
+
+// POST create new category
+exports.createCategory = async (req, res) => {
+  try {
+    if (req.uploadError) {
+      return res.status(400).json({ success: false, message: req.uploadError });
+    }
+    const { name, categoryType } = req.body;
+
+    console.log("req.body", req.body)
+
+    if (!categoryType || !["Veg", "Non-Veg"].includes(categoryType)) {
+      return res.status(400).json({ message: "Invalid or missing categoryType. Must be 'Veg' or 'Non-Veg'." });
+    }
+
+    
+    const filePath = req.files.image[0].path;
+
+    const result = await cloudinary.uploader.upload(filePath, {
+      folder: "categories",
+    });
+
+    fs.unlinkSync(filePath);
+
+    const newCategory = new Menu({
+      name,
+      categoryType,
+      cateimage: result.secure_url,
+      items: [],
+    });
+
+    await newCategory.save();
+    res.status(201).json({ message: "Category created", data: newCategory });
+  } catch (err) {
+    res.status(500).json({ message: "Failed to create category", error: err.message });
+  }
+};
+
+
+exports.updateCategoryById = async (req, res) => {
   try {
     if (req.uploadError) {
       return res.status(400).json({ success: false, message: req.uploadError });
     }
 
-    const { itemType, itemCategory, itemName, itemCost } = req.body;
+    const { id, name, categoryType } = req.body;
 
-    const filePath = req.files.image[0].path;
+    // Validate category type
+    if (categoryType && !["Veg", "Non-Veg"].includes(categoryType)) {
+      return res.status(400).json({
+        message: "Invalid categoryType. Must be 'Veg' or 'Non-Veg'.",
+      });
+    }
 
-    const result = await cloudinary.uploader.upload(filePath, {
-      folder: "menuItems",
-    });
+    // Fetch the category
+    const category = await Menu.findById(id);
+    if (!category) {
+      return res.status(404).json({ message: "Category not found" });
+    }
 
-    fs.unlinkSync(filePath);
+    // If a new image is uploaded
+    if (req.files && req.files.image && req.files.image.length > 0) {
+      const filePath = req.files.image[0].path;
 
-const newItem = new Menu({
-  itemType,
-  itemCategory,
-  itemName,
-  itemCost,
-  image: result.secure_url,
-});
-await newItem.save();
+      // Extract public_id from old Cloudinary URL (cateimage)
+      const oldUrl = category.cateimage;
+      console.log("oldUrl", oldUrl)
+      //https://res.cloudinary.com/ducfodlsa/image/upload/v1750786170/categories/jg9wtzbjnv9kxb9zk7ua.png
+      const publicIdMatch = oldUrl.match(/\/([^/]+)\.[a-z]+$/i); // Extract file name without extension
+     console.log("publicIdMatch", publicIdMatch)
+      const publicId = publicIdMatch ? `categories/${publicIdMatch[1]}` : null;
+console.log("publicId", publicId)
+      // Delete old image from Cloudinary
+      if (publicId) {
+        await cloudinary.uploader.destroy(publicId);
+      }
+
+      // Upload new image to Cloudinary
+      const result = await cloudinary.uploader.upload(filePath, {
+        folder: "categories",
+      });
+
+      // Delete local temp file
+      fs.unlinkSync(filePath);
+
+      // Update category image URL
+      category.cateimage = result.secure_url;
+    }
+
+    // Update fields
+    if (name) category.name = name;
+    if (categoryType) category.categoryType = categoryType;
+
+    // Save updates
+    await category.save();
+
+    res.status(200).json({ message: "Category updated", data: category });
+
+  } catch (err) {
+    res.status(500).json({ message: "Failed to update category", error: err.message });
+  }
+};
+
+
+exports.addItemToCategory = async (req, res) => {
+  try {
+    const { categoryId, itemName, itemCost } = req.body;
+
+    if (req.uploadError) {
+      return res.status(400).json({ success: false, message: req.uploadError });
+    }
+
+    const category = await Menu.findById(categoryId);
+    if (!category)
+      return res.status(404).json({ success: false, message: "Category not found" });
+
+    const filePath = req.files.image?.[0]?.path;
+
+    let imageUrl = "";
+    if (filePath) {
+      const result = await cloudinary.uploader.upload(filePath, {
+        folder: "menuItems",
+      });
+      fs.unlinkSync(filePath);
+      imageUrl = result.secure_url;
+    }
+
+    const newItem = {
+      itemName,
+      itemCost,
+      image: imageUrl,
+    };
+
+    category.items.push(newItem);
+
+    await category.save();
 
     return res.status(200).json({ success: true, data: newItem });
   } catch (error) {
+    console.error("Add Item Error:", error);
     return res.status(500).json({ success: false, message: "Something went wrong." });
   }
 };
 
 
-exports.getAllMenu = async (req, res) => {
-  try {
-       const menu = await Menu.find();
-        if (!menu || menu.length === 0) {
-          return res.status(404).json({ message: "No menu found" });
-        }
-  
-    return res.status(200).json({ success: true, menu });
-  } catch (error) {
-    return res.status(500).json({ success: false, message: "Something went wrong." });
-  }
-};
 
-exports.getRandomMenu = async (req, res) => {
+exports.getById = async (req, res) => {
+  const { id } = req.params;
   try {
-    const menu = await Menu.find();
-    if (!menu || menu.length === 0) {
-      return res.status(404).json({ message: "No menu found" });
+    const category = await Menu.findById(id);
+    if (category) return res.status(200).json({ type: "category", data: category });
+
+    const menus = await Menu.find();
+    for (const menu of menus) {
+      const item = menu.items.id(id);
+      if (item) {
+        return res.status(200).json({ type: "item", data: item, categoryId: menu._id });
+      }
     }
 
-    console.log("menu")
-    // Shuffle the array and pick the first 5 items
-    const shuffled = menu.sort(() => 0.5 - Math.random());
-    const randomItems = shuffled.slice(0, 5);
+    res.status(404).json({ message: "Category or item not found" });
+  } catch (err) {
+    res.status(500).json({ message: "Server error", error: err.message });
+  }
+};
 
-    return res.status(200).json({ success: true, menu: randomItems });
+
+// PUT update item
+exports.updateItemById = async (req, res) => {
+  const { categoryId, itemId } = req.params;
+  const { itemName, itemCost, isEnabled, imageBase64 } = req.body;
+
+  try {
+    const category = await Menu.findById(categoryId);
+    if (!category) return res.status(404).json({ message: "Category not found" });
+
+    const item = category.items.id(itemId);
+    if (!item) return res.status(404).json({ message: "Item not found" });
+
+    if (itemName !== undefined) item.itemName = itemName;
+    if (itemCost !== undefined) item.itemCost = itemCost;
+    if (isEnabled !== undefined) item.isEnabled = isEnabled;
+
+    if (imageBase64) {
+      const upload = await cloudinary.uploader.upload(imageBase64, { folder: "menu_items" });
+      item.image = upload.secure_url;
+    }
+
+    await category.save();
+    res.status(200).json({ message: "Item updated", data: item });
   } catch (error) {
-    return res.status(500).json({ success: false, message: "Something went wrong." });
+    res.status(500).json({ message: "Item update failed", error: error.message });
+  }
+};
+
+// DELETE category
+exports.deleteCategoryById = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const category = await Menu.findById(id);
+    if (!category) return res.status(404).json({ message: "Category not found" });
+
+    await Menu.findByIdAndDelete(id);
+    res.status(200).json({ message: "Category and its items deleted" });
+  } catch (error) {
+    res.status(500).json({ message: "Category deletion failed", error: error.message });
+  }
+};
+
+// DELETE item
+exports.deleteItemById = async (req, res) => {
+  const { categoryId, itemId } = req.params;
+
+  try {
+    const category = await Menu.findById(categoryId);
+    if (!category) return res.status(404).json({ message: "Category not found" });
+
+    const item = category.items.id(itemId);
+    if (!item) return res.status(404).json({ message: "Item not found" });
+
+    category.items = category.items.filter(i => i._id.toString() !== itemId);
+    await category.save();
+
+    res.status(200).json({ message: "Item deleted" });
+  } catch (error) {
+    res.status(500).json({ message: "Item deletion failed", error: error.message });
   }
 };
 
