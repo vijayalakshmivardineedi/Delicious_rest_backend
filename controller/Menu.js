@@ -284,17 +284,22 @@ cloudinary.config({
   api_secret: process.env.CLOUD_API_SECRET,
 });
 
-// GET all menu categories
+
 exports.getAllMenus = async (req, res) => {
   try {
     const menus = await Menu.find();
+
+    if (menus.length === 0) {
+      return res.status(404).json({ message: "No Data Found!" });
+    }
+
     res.status(200).json(menus);
   } catch (err) {
     res.status(500).json({ message: "Failed to fetch menus", error: err.message });
   }
 };
 
-// POST create new category
+
 exports.createCategory = async (req, res) => {
   try {
     if (req.uploadError) {
@@ -339,29 +344,23 @@ exports.updateCategoryById = async (req, res) => {
     }
 
     const { id, name, categoryType } = req.body;
-
-    // Validate category type
     if (categoryType && !["Veg", "Non-Veg"].includes(categoryType)) {
       return res.status(400).json({
         message: "Invalid categoryType. Must be 'Veg' or 'Non-Veg'.",
       });
     }
 
-    // Fetch the category
     const category = await Menu.findById(id);
     if (!category) {
       return res.status(404).json({ message: "Category not found" });
     }
 
-    // If a new image is uploaded
     if (req.files && req.files.image && req.files.image.length > 0) {
       const filePath = req.files.image[0].path;
 
-      // Extract public_id from old Cloudinary URL (cateimage)
       const oldUrl = category.cateimage;
       console.log("oldUrl", oldUrl)
-      //https://res.cloudinary.com/ducfodlsa/image/upload/v1750786170/categories/jg9wtzbjnv9kxb9zk7ua.png
-      const publicIdMatch = oldUrl.match(/\/([^/]+)\.[a-z]+$/i); // Extract file name without extension
+      const publicIdMatch = oldUrl.match(/\/([^/]+)\.[a-z]+$/i);
      console.log("publicIdMatch", publicIdMatch)
       const publicId = publicIdMatch ? `categories/${publicIdMatch[1]}` : null;
 console.log("publicId", publicId)
