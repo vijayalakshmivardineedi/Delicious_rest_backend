@@ -10,6 +10,8 @@ const {
   updateItemById,
   deleteCategoryById,
   deleteItemById,
+  toggleCategory,
+  toggleItem 
 } = require("../controller/Menu");
 const upload = require("../Middleware/uploads");
 
@@ -28,7 +30,6 @@ const uploadWithErrorHandler = (req, res, next) => {
 
     const hasImage = req.files && req.files.image && req.files.image.length > 0;
 
-    // Only enforce image validation for POST requests
     if (isPostMethod && !hasImage) {
       req.uploadError = req.uploadError || "Image file is required.";
       console.log("Image field is required for POST but missing.");
@@ -49,9 +50,12 @@ router.post("/createCategory", uploadWithErrorHandler, createCategory);
 router.post("/addItemToCategory", uploadWithErrorHandler, addItemToCategory);
 
 router.put("/updateCategoryById", uploadWithErrorHandler, updateCategoryById);
-router.put("/updateItemToCategory/:categoryId/:itemId", uploadWithErrorHandler, updateItemById);
+router.put("/updateItem/:categoryId/:itemId", uploadWithErrorHandler, updateItemById);
 
-router.delete("/deleteCategory/:id", deleteCategoryById);
+router.delete("/deleteCategoryById/:id", deleteCategoryById);
 router.delete("/deleteItem/:categoryId/:itemId", deleteItemById);
+
+router.patch("/toggleCategory/:categoryId", toggleCategory);
+router.patch("/toggleItem/:categoryId/:itemId", toggleItem);
 
 module.exports = router;

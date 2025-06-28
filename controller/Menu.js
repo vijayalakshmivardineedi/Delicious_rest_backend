@@ -8,17 +8,22 @@ cloudinary.config({
   api_secret: process.env.CLOUD_API_SECRET,
 });
 
-// GET all menu categories
+
 exports.getAllMenus = async (req, res) => {
   try {
     const menus = await Menu.find();
+
+    if (menus.length === 0) {
+      return res.status(404).json({ message: "No Data Found!" });
+    }
+
     res.status(200).json(menus);
   } catch (err) {
     res.status(500).json({ message: "Failed to fetch menus", error: err.message });
   }
 };
 
-// POST create new category
+
 exports.createCategory = async (req, res) => {
   try {
     if (req.uploadError) {
@@ -63,60 +68,64 @@ exports.updateCategoryById = async (req, res) => {
     }
 
     const { id, name, categoryType } = req.body;
-
-    // Validate category type
     if (categoryType && !["Veg", "Non-Veg"].includes(categoryType)) {
       return res.status(400).json({
         message: "Invalid categoryType. Must be 'Veg' or 'Non-Veg'.",
       });
     }
 
-    // Fetch the category
     const category = await Menu.findById(id);
     if (!category) {
       return res.status(404).json({ message: "Category not found" });
     }
 
-    // If a new image is uploaded
     if (req.files && req.files.image && req.files.image.length > 0) {
       const filePath = req.files.image[0].path;
-
-      // Extract public_id from old Cloudinary URL (cateimage)
       const oldUrl = category.cateimage;
-      console.log("oldUrl", oldUrl)
-      //https://res.cloudinary.com/ducfodlsa/image/upload/v1750786170/categories/jg9wtzbjnv9kxb9zk7ua.png
-      const publicIdMatch = oldUrl.match(/\/([^/]+)\.[a-z]+$/i); // Extract file name without extension
-     console.log("publicIdMatch", publicIdMatch)
+      const publicIdMatch = oldUrl.match(/\/([^/]+)\.[a-z]+$/i);
       const publicId = publicIdMatch ? `categories/${publicIdMatch[1]}` : null;
-console.log("publicId", publicId)
-      // Delete old image from Cloudinary
       if (publicId) {
         await cloudinary.uploader.destroy(publicId);
       }
 
-      // Upload new image to Cloudinary
+
       const result = await cloudinary.uploader.upload(filePath, {
         folder: "categories",
       });
-
-      // Delete local temp file
       fs.unlinkSync(filePath);
-
-      // Update category image URL
       category.cateimage = result.secure_url;
     }
 
-    // Update fields
     if (name) category.name = name;
     if (categoryType) category.categoryType = categoryType;
 
-    // Save updates
     await category.save();
 
     res.status(200).json({ message: "Category updated", data: category });
 
   } catch (err) {
     res.status(500).json({ message: "Failed to update category", error: err.message });
+  }
+};
+
+exports.deleteCategoryById = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const category = await Menu.findById(id);
+    if (!category) return res.status(404).json({ message: "Category not found" });
+
+     const oldUrl = category.cateimage;
+      const publicIdMatch = oldUrl.match(/\/([^/]+)\.[a-z]+$/i);
+      const publicId = publicIdMatch ? `categories/${publicIdMatch[1]}` : null;
+      if (publicId) {
+        await cloudinary.uploader.destroy(publicId);
+      }
+
+
+    await Menu.findByIdAndDelete(id);
+    res.status(200).json({ message: "Category and its items deleted" });
+  } catch (error) {
+    res.status(500).json({ message: "Category deletion failed", error: error.message });
   }
 };
 
@@ -129,9 +138,12 @@ exports.addItemToCategory = async (req, res) => {
       return res.status(400).json({ success: false, message: req.uploadError });
     }
 
-    const category = await Menu.findById(categoryId);
-    if (!category)
-      return res.status(404).json({ success: false, message: "Category not found" });
+     const category = await Menu.findById(categoryId);
+    if (!category) {
+      return res.status(404).json({ message: "Category not found" });
+    }
+
+    console.log("category", category)
 
     const filePath = req.files.image?.[0]?.path;
 
@@ -161,6 +173,92 @@ exports.addItemToCategory = async (req, res) => {
   }
 };
 
+exports.updateItemById = async (req, res) => {
+  try {
+    const { categoryId, itemId } = req.params;
+    const { itemName, itemCost, isEnabled } = req.body;
+
+    if (req.uploadError) {
+      return res.status(400).json({ success: false, message: req.uploadError });
+    }
+
+    const category = await Menu.findById(categoryId);
+    if (!category) {
+      return res.status(404).json({ message: "Category not found" });
+    }
+
+    const item = category.items.id(itemId);
+    if (!item) {
+      return res.status(404).json({ message: "Item not found in category" });
+    }
+
+    // If new image is uploaded
+    if (req.files && req.files.image && req.files.image.length > 0) {
+      const filePath = req.files.image[0].path;
+
+      const oldUrl = item.image;
+      const publicIdMatch = oldUrl.match(/\/([^/]+)\.[a-z]+$/i);
+      const publicId = publicIdMatch ? `menuItems/${publicIdMatch[1]}` : null;
+
+      if (publicId) {
+        await cloudinary.uploader.destroy(publicId);
+      }
+
+      const result = await cloudinary.uploader.upload(filePath, {
+        folder: "menuItems",
+      });
+
+      fs.unlinkSync(filePath);
+      item.image = result.secure_url;
+    }
+
+    if (itemName !== undefined) item.itemName = itemName;
+    if (itemCost !== undefined) item.itemCost = itemCost;
+    if (isEnabled !== undefined) item.isEnabled = isEnabled;
+
+    await category.save();
+
+    res.status(200).json({ message: "Item updated successfully", data: item });
+
+  } catch (error) {
+    res.status(500).json({ message: "Item update failed", error: error.message });
+  }
+};
+
+
+
+exports.deleteItemById = async (req, res) => {
+  const { categoryId, itemId } = req.params;
+
+  try {
+    const category = await Menu.findById(categoryId);
+    if (!category) {
+      return res.status(404).json({ message: "Category not found" });
+    }
+
+    const item = category.items.id(itemId);
+    if (!item) {
+      return res.status(404).json({ message: "Item not found in category" });
+    }
+
+
+    const oldUrl = item.image;
+      const publicIdMatch = oldUrl.match(/\/([^/]+)\.[a-z]+$/i);
+      const publicId = publicIdMatch ? `menuItems/${publicIdMatch[1]}` : null;
+
+      if (publicId) {
+        await cloudinary.uploader.destroy(publicId);
+      }
+
+      
+    category.items = category.items.filter(i => i._id.toString() !== itemId);
+    await category.save();
+
+    res.status(200).json({ message: "Item deleted" });
+  } catch (error) {
+    res.status(500).json({ message: "Item deletion failed", error: error.message });
+  }
+};
 
 
 exports.getById = async (req, res) => {
@@ -183,66 +281,38 @@ exports.getById = async (req, res) => {
   }
 };
 
-
-// PUT update item
-exports.updateItemById = async (req, res) => {
-  const { categoryId, itemId } = req.params;
-  const { itemName, itemCost, isEnabled, imageBase64 } = req.body;
-
+exports.toggleCategory = async (req, res) => {
   try {
+    const { categoryId } = req.params;
+    const category = await Menu.findById(categoryId);
+    if (!category) return res.status(404).json({ message: "Category not found" });
+
+    category.isEnabled = !category.isEnabled;
+    category.items.forEach(item => {
+      item.isEnabled = category.isEnabled;
+    });
+
+    await category.save();
+    res.status(200).json({ message: "Category toggled", data: category });
+  } catch (error) {
+    res.status(500).json({ message: "Error toggling category", error: error.message });
+  }
+};
+
+exports.toggleItem = async (req, res) => {
+  try {
+    const { categoryId, itemId } = req.params;
     const category = await Menu.findById(categoryId);
     if (!category) return res.status(404).json({ message: "Category not found" });
 
     const item = category.items.id(itemId);
     if (!item) return res.status(404).json({ message: "Item not found" });
 
-    if (itemName !== undefined) item.itemName = itemName;
-    if (itemCost !== undefined) item.itemCost = itemCost;
-    if (isEnabled !== undefined) item.isEnabled = isEnabled;
-
-    if (imageBase64) {
-      const upload = await cloudinary.uploader.upload(imageBase64, { folder: "menu_items" });
-      item.image = upload.secure_url;
-    }
-
-    await category.save();
-    res.status(200).json({ message: "Item updated", data: item });
-  } catch (error) {
-    res.status(500).json({ message: "Item update failed", error: error.message });
-  }
-};
-
-// DELETE category
-exports.deleteCategoryById = async (req, res) => {
-  const { id } = req.params;
-  try {
-    const category = await Menu.findById(id);
-    if (!category) return res.status(404).json({ message: "Category not found" });
-
-    await Menu.findByIdAndDelete(id);
-    res.status(200).json({ message: "Category and its items deleted" });
-  } catch (error) {
-    res.status(500).json({ message: "Category deletion failed", error: error.message });
-  }
-};
-
-// DELETE item
-exports.deleteItemById = async (req, res) => {
-  const { categoryId, itemId } = req.params;
-
-  try {
-    const category = await Menu.findById(categoryId);
-    if (!category) return res.status(404).json({ message: "Category not found" });
-
-    const item = category.items.id(itemId);
-    if (!item) return res.status(404).json({ message: "Item not found" });
-
-    category.items = category.items.filter(i => i._id.toString() !== itemId);
+    item.isEnabled = !item.isEnabled;
     await category.save();
 
-    res.status(200).json({ message: "Item deleted" });
+    res.status(200).json({ message: "Item toggled", data: item });
   } catch (error) {
-    res.status(500).json({ message: "Item deletion failed", error: error.message });
+    res.status(500).json({ message: "Error toggling item", error: error.message });
   }
 };
-

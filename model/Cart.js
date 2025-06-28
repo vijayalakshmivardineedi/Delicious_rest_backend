@@ -23,15 +23,23 @@ const itemSchema = new mongoose.Schema({
   },
 });
 
-const cartSchema = new mongoose.Schema({
-  userId: {
-    type: String,
-    required: true,
-    unique: true,
+const cartSchema = new mongoose.Schema(
+  {
+    userId: {
+      type: String,
+      required: true,
+      unique: true,
+    },
+    items: [itemSchema],
+    cookingInstructions: {
+      type: String,
+      default: "",
+    },
   },
-  items: [itemSchema],
-}, {
-  timestamps: true
-});
+  {
+    timestamps: true,
+  }
+);
+
 
 module.exports = mongoose.model("Cart", cartSchema);

@@ -2,8 +2,7 @@ const Cart = require("../model/Cart");
 
 exports.saveCart = async (req, res) => {
   try {
-    let { userId, items } = req.body;
-
+    let { userId, items, cookingInstructions } = req.body;
     if (typeof userId === 'string') {
       userId = userId.replace(/^"|"$/g, '');
     }
@@ -17,7 +16,7 @@ exports.saveCart = async (req, res) => {
 
     await Cart.findOneAndUpdate(
       { userId },
-      { userId, items: transformedItems },
+      { userId, items: transformedItems, cookingInstructions: cookingInstructions || "" },
       { upsert: true, new: true }
     );
 
@@ -30,14 +29,7 @@ exports.saveCart = async (req, res) => {
 
 exports.updateCart = async (req, res) => {
   try {
-    let { userId, items } = req.body;
-
-    console.log("userId", userId)
-    console.log("items", items)
-
-    // if (typeof userId === 'string') {
-    //   userId = userId.replace(/^"|"$/g, '');
-    // }
+    let { userId, items, cookingInstructions } = req.body;
     const transformedItems = Object.values(items).map((item) => ({
       itemId: item.itemId,
       itemName: item.itemName,
@@ -48,13 +40,13 @@ exports.updateCart = async (req, res) => {
 
     await Cart.findOneAndUpdate(
       { userId },
-      { userId, items: transformedItems },
+      { userId, items: transformedItems, cookingInstructions: cookingInstructions || "" },
       { upsert: true, new: true }
     );
 
-    res.status(200).json({ message: "Cart saved" });
+    res.status(200).json({ message: "Cart updated" });
   } catch (error) {
-    console.error("Error saving cart:", error);
+    console.error("Error updating cart:", error);
     res.status(400).json({ error });
   }
 };
