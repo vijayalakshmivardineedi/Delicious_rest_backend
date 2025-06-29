@@ -31,10 +31,10 @@ const cartSchema = new mongoose.Schema(
       unique: true,
     },
     items: [itemSchema],
-    cookingInstructions: {
-      type: String,
-      default: "",
-    },
+    // cookingInstructions: {
+    //   type: String,
+    //   default: "",
+    // },
   },
   {
     timestamps: true,

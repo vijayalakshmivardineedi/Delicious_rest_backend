@@ -24,7 +24,6 @@ exports.createOrder = async (req, res) => {
   try {
     const orderData = req.body;
 
-    // Generate unique 4-digit orderId if not provided
     if (!orderData.orderId) {
       orderData.orderId = await generateUniqueOrderId();
     }
