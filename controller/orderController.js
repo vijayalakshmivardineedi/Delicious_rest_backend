@@ -124,7 +124,6 @@ exports.cancleByUser = async (req, res) => {
 };
 
 ////  ADMIN CONTROLS
-
 exports.getAllOrdersForAdmin = async (req, res) => {
   try {
     const orders = await Order.find();
