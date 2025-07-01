@@ -16,6 +16,4 @@ router.get("/:orderId",verifyToken, getOrderById);
 router.get("/getOrderByUserId/:userId",verifyToken, getOrderByUserId);
 router.post("/cancleByUser/:userId/:orderId",verifyToken, cancleByUser);
 
-
-
 module.exports = router;

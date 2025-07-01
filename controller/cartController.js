@@ -70,8 +70,6 @@ exports.deleteCart = async (req, res) => {
   }
 };
 
-
-
 exports.getCart = async (req, res) => {
   const { userId } = req.params;
   const cart = await Cart.findOne({ userId });
