@@ -1,18 +1,17 @@
 const Order = require("../model/Order");
 const User = require("../model/User");
 
-// Helper to generate a random 4-digit string orderId
+
 function generate4DigitOrderId() {
   return Math.floor(1000 + Math.random() * 9000).toString();
 }
 
-// Helper to check if orderId exists in DB
 async function isOrderIdUnique(orderId) {
   const existing = await Order.findOne({ orderId });
   return !existing;
 }
 
-// Generate a unique 4-digit orderId (try up to 5 times)
+
 async function generateUniqueOrderId() {
   for (let i = 0; i < 5; i++) {
     const newId = generate4DigitOrderId();
@@ -21,8 +20,7 @@ async function generateUniqueOrderId() {
   throw new Error("Failed to generate unique orderId, try again");
 }
 
-exports.createOrder =
-// ✅ Create Order
+
 exports.createOrder = async (req, res) => {
   try {
     const {
@@ -36,7 +34,7 @@ exports.createOrder = async (req, res) => {
       total,
       paymentMethod,
       status,
-      cookingInstructions = "", // ensure default value
+      cookingInstructions = "", 
     } = req.body;
 
     if (
@@ -78,7 +76,7 @@ exports.createOrder = async (req, res) => {
   }
 };
 
-// ✅ Get Order by Mongo ID
+
 exports.getOrderById = async (req, res) => {
   try {
     const { orderId } = req.params;
@@ -90,7 +88,7 @@ exports.getOrderById = async (req, res) => {
   }
 };
 
-// ✅ Get Orders by User ID
+
 exports.getOrderByUserId = async (req, res) => {
   try {
     const { userId } = req.params;
@@ -125,9 +123,7 @@ exports.cancleByUser = async (req, res) => {
   }
 };
 
-//// ✅ ADMIN CONTROLS
-
-
+////  ADMIN CONTROLS
 
 exports.getAllOrdersForAdmin = async (req, res) => {
   try {
