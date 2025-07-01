@@ -32,7 +32,7 @@ const orderSchema = new mongoose.Schema({
   rating: { type: String },
   prepTime: { type: Number, default: 20 },
 }, {
-  timestamps: true  // ✅ This adds createdAt and updatedAt fields automatically
+  timestamps: true  
 });
 
 
