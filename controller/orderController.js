@@ -159,17 +159,22 @@ exports.getAllOrdersForAdmin = async (req, res) => {
 exports.adminStatusUpdate = async (req, res) => {
   try {
     const { orderId, status } = req.params;
+    const { prepTime } = req.body;
+
     const order = await Order.findOne({ orderId: orderId });
 
     if (!order)
       return res.status(404).json({ message: "Order not found" });
 
     if (order.status === "Cancelled")
-      return res
-        .status(400)
-        .json({ message: `Cannot update status. Order has been cancelled.` });
+      return res.status(400).json({ message: "Order already cancelled" });
 
     order.status = status;
+
+    if (status === "Preparing" && prepTime) {
+      order.prepTime = prepTime;
+    }
+
     await order.save();
 
     res.status(200).json({ message: `Order marked as ${status}` });
@@ -180,3 +185,38 @@ exports.adminStatusUpdate = async (req, res) => {
     });
   }
 };
+
+exports.getOrderInsightsByDate = async (req, res) => {
+  try {
+    const { date } = req.query;
+    if (!date) return res.status(400).json({ message: "Date is required" });
+
+    const start = new Date(date);
+    start.setUTCHours(0, 0, 0, 0);
+
+    const end = new Date(date);
+    end.setUTCHours(23, 59, 59, 999);
+
+    const orders = await Order.find({
+      createdAt: {
+        $gte: start,
+        $lte: end,
+      },
+    });
+
+    const insights = {
+      placed: orders.length,
+      delivered: orders.filter((o) => o.status === "Delivered").length,
+      cancelled: orders.filter((o) => o.status === "Cancelled" || o.status === "Rejected").length,
+      pending: orders.filter((o) =>
+        ["Preparing", "Ready", "Picked Up"].includes(o.status)
+      ).length,
+    };
+
+    res.status(200).json(insights);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+

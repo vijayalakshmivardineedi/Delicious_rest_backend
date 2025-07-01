@@ -27,9 +27,10 @@ const orderSchema = new mongoose.Schema({
   status: {
     type: String,
     required: true,
-    enum: ["Ordered", "Cancelled", "Rejected", "Approved", "Preparing", "Onway", "Delevered"]
+    enum: ["Ordered", "Cancelled", "Rejected", "Approved", "Preparing", "Ready", "Delivered", "Picked Up"]
   },
-  rating: { type: String }
+  rating: { type: String },
+  prepTime: { type: Number, default: 20 },
 }, {
   timestamps: true  // ✅ This adds createdAt and updatedAt fields automatically
 });
