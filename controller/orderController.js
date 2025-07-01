@@ -1,4 +1,5 @@
 const Order = require("../model/Order");
+const User = require("../model/User");
 
 // Helper to generate a random 4-digit string orderId
 function generate4DigitOrderId() {
@@ -77,17 +78,39 @@ exports.cancleByUser = async (req, res) => {
 
 ////admins
 
+
+
 exports.getAllOrdersForAdmin = async (req, res) => {
   try {
     const orders = await Order.find();
+
     if (!orders || orders.length === 0) {
       return res.status(404).json({ message: "No orders found" });
     }
-    res.status(200).status(200).json(orders);
+
+    const userIds = [...new Set(orders.map(order => order.userId))];
+
+    const users = await User.find({ userId: { $in: userIds } });
+
+    const userMap = {};
+    users.forEach(user => {
+      userMap[user.userId] = user;
+    });
+
+    const ordersWithUsers = orders.map(order => {
+      return {
+        ...order._doc,
+        user: userMap[order.userId] || null
+      };
+    });
+
+    res.status(200).json(ordersWithUsers);
   } catch (error) {
+    console.error("Error fetching orders:", error);
     res.status(500).json({ error: error.message });
   }
 };
+
 
 exports.adminStatusUpdate = async (req, res) => {
   try {
