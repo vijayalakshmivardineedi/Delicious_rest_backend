@@ -80,8 +80,18 @@ exports.createOrder = async (req, res) => {
 exports.getOrderById = async (req, res) => {
   try {
     const { orderId } = req.params;
-    const order = await Order.findById(orderId);
-    if (!order) return res.status(404).json({ message: "Order not found" });
+    const orders = await Order.findById(orderId);
+    console.log("order", orders)
+    if (!orders) return res.status(404).json({ message: "Order not found" });
+    const userId = orders.userId
+
+    const user = await User.findOne({ userId });
+
+    const order = {
+orders,
+user
+    }
+
     res.status(200).json(order);
   } catch (error) {
     res.status(500).json({ error: error.message });
