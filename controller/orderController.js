@@ -185,35 +185,108 @@ exports.adminStatusUpdate = async (req, res) => {
   }
 };
 
-exports.getOrderInsightsByDate = async (req, res) => {
+exports.getTodaysOrders = async (req, res) => {
   try {
-    const { date } = req.query;
-    if (!date) return res.status(400).json({ message: "Date is required" });
+    const orders = await Order.find();
 
-    const start = new Date(date);
-    start.setUTCHours(0, 0, 0, 0);
+    if (!orders || orders.length === 0) {
+      return res.status(404).json({ message: "No orders found" });
+    }
 
-    const end = new Date(date);
-    end.setUTCHours(23, 59, 59, 999);
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
 
-    const orders = await Order.find({
-      createdAt: {
-        $gte: start,
-        $lte: end,
-      },
+    const endOfDay = new Date();
+    endOfDay.setHours(23, 59, 59, 999);
+
+    const todaysOrders = orders.filter(order => {
+      const createdAt = new Date(order.createdAt);
+      return createdAt >= startOfDay && createdAt <= endOfDay;
     });
 
-    const insights = {
-      placed: orders.length,
-      delivered: orders.filter((o) => o.status === "Delivered").length,
-      cancelled: orders.filter((o) => o.status === "Cancelled" || o.status === "Rejected").length,
-      pending: orders.filter((o) =>
-        ["Preparing", "Ready", "Picked Up"].includes(o.status)
-      ).length,
+    const countByStatus = {
+      Ordered: 0,
+      Cancelled: 0,
+      Rejected: 0,
+      Delivered: 0,
+      Pending: 0,
     };
 
-    res.status(200).json(insights);
+    const pendingStatuses = ["Picked Up", "Approved", "Preparing", "Ready"];
+
+    todaysOrders.forEach(order => {
+      const status = order.status;
+      if (countByStatus[status] !== undefined) {
+        countByStatus[status]++;
+      } else if (pendingStatuses.includes(status)) {
+        countByStatus.Pending++;
+      }
+    });
+
+    const data = {
+      todaysOrders,
+      counts: countByStatus,
+    };
+
+    res.status(200).json(data);
   } catch (error) {
+    console.error("Error in getTodaysOrders:", error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.getOrdersByDates = async (req, res) => {
+  try {
+    const { fromDate, toDate } = req.body;
+
+    if (!fromDate || !toDate) {
+      return res.status(400).json({ message: "fromDate and toDate are required" });
+    }
+
+    const from = new Date(fromDate);
+    from.setHours(0, 0, 0, 0);
+
+    const to = new Date(toDate);
+    to.setHours(23, 59, 59, 999);
+
+    const orders = await Order.find();
+
+    if (!orders || orders.length === 0) {
+      return res.status(404).json({ message: "No orders found" });
+    }
+
+    const filteredOrders = orders.filter(order => {
+      const createdAt = new Date(order.createdAt);
+      return createdAt >= from && createdAt <= to;
+    });
+
+    const countByStatus = {
+      Ordered: 0,
+      Cancelled: 0,
+      Rejected: 0,
+      Delivered: 0,
+      Pending: 0,
+    };
+
+    const pendingStatuses = ["Picked Up", "Approved", "Preparing", "Ready"];
+
+    filteredOrders.forEach(order => {
+      const status = order.status;
+      if (countByStatus[status] !== undefined) {
+        countByStatus[status]++;
+      } else if (pendingStatuses.includes(status)) {
+        countByStatus.Pending++;
+      }
+    });
+
+    const data = {
+      filteredOrders,
+      counts: countByStatus,
+    };
+
+    res.status(200).json(data);
+  } catch (error) {
+    console.error("Error in getOrdersByDtares:", error);
     res.status(500).json({ error: error.message });
   }
 };

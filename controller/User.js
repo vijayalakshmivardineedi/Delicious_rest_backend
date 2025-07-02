@@ -6,7 +6,6 @@ const jwt = require("jsonwebtoken");
 const API_KEY = process.env.API_KEY;
 const JWT_SECRET = process.env.JWT_SECRET;
 
-
 const otpSessions = new Map();
 
 const normalizePhone = (phone) => phone.replace(/\D/g, "").slice(-10);
@@ -16,7 +15,7 @@ exports.sendOTP = async (req, res) => {
   if (!phone) return res.status(400).json({ message: "Phone is required" });
 
     const UserPhone = await User.findOne({phone});
-      if (!UserPhone) {
+      if (UserPhone) {
       
         return res.status(403).json({ message: "Phone Number Already registered" });
       }

@@ -8,42 +8,34 @@ cloudinary.config({
   api_secret: process.env.CLOUD_API_SECRET,
 });
 
-
 exports.getAllMenus = async (req, res) => {
   try {
     const menus = await Menu.find();
-
     if (menus.length === 0) {
-      return res.status(404).json({ message: "No Data Found!" });
+      return res.status(404).json([]);
     }
-
     res.status(200).json(menus);
   } catch (err) {
-    res.status(500).json({ message: "Failed to fetch menus", error: err.message });
+    res
+      .status(500)
+      .json({ message: "Failed to fetch menus", error: err.message });
   }
 };
 
-
 exports.createCategory = async (req, res) => {
   try {
-    if (req.uploadError) {
-      return res.status(400).json({ success: false, message: req.uploadError });
-    }
+    if (req.uploadError)
+      return res.status(400).json({ message: req.uploadError });
+
     const { name, categoryType } = req.body;
-
-    console.log("req.body", req.body)
-
     if (!categoryType || !["Veg", "Non-Veg"].includes(categoryType)) {
-      return res.status(400).json({ message: "Invalid or missing categoryType. Must be 'Veg' or 'Non-Veg'." });
+      return res.status(400).json({ message: "Invalid categoryType" });
     }
 
-    
     const filePath = req.files.image[0].path;
-
     const result = await cloudinary.uploader.upload(filePath, {
       folder: "categories",
     });
-
     fs.unlinkSync(filePath);
 
     const newCategory = new Menu({
@@ -52,14 +44,14 @@ exports.createCategory = async (req, res) => {
       cateimage: result.secure_url,
       items: [],
     });
-
     await newCategory.save();
-    res.status(201).json({ message: "Category created", data: newCategory });
+    res.status(201).json(newCategory); // ✅ fix: return raw category
   } catch (err) {
-    res.status(500).json({ message: "Failed to create category", error: err.message });
+    res
+      .status(500)
+      .json({ message: "Failed to create category", error: err.message });
   }
 };
-
 
 exports.updateCategoryById = async (req, res) => {
   try {
@@ -88,7 +80,6 @@ exports.updateCategoryById = async (req, res) => {
         await cloudinary.uploader.destroy(publicId);
       }
 
-
       const result = await cloudinary.uploader.upload(filePath, {
         folder: "categories",
       });
@@ -102,9 +93,10 @@ exports.updateCategoryById = async (req, res) => {
     await category.save();
 
     res.status(200).json({ message: "Category updated", data: category });
-
   } catch (err) {
-    res.status(500).json({ message: "Failed to update category", error: err.message });
+    res
+      .status(500)
+      .json({ message: "Failed to update category", error: err.message });
   }
 };
 
@@ -112,23 +104,24 @@ exports.deleteCategoryById = async (req, res) => {
   const { id } = req.params;
   try {
     const category = await Menu.findById(id);
-    if (!category) return res.status(404).json({ message: "Category not found" });
+    if (!category)
+      return res.status(404).json({ message: "Category not found" });
 
-     const oldUrl = category.cateimage;
-      const publicIdMatch = oldUrl.match(/\/([^/]+)\.[a-z]+$/i);
-      const publicId = publicIdMatch ? `categories/${publicIdMatch[1]}` : null;
-      if (publicId) {
-        await cloudinary.uploader.destroy(publicId);
-      }
-
+    const oldUrl = category.cateimage;
+    const publicIdMatch = oldUrl.match(/\/([^/]+)\.[a-z]+$/i);
+    const publicId = publicIdMatch ? `categories/${publicIdMatch[1]}` : null;
+    if (publicId) {
+      await cloudinary.uploader.destroy(publicId);
+    }
 
     await Menu.findByIdAndDelete(id);
     res.status(200).json({ message: "Category and its items deleted" });
   } catch (error) {
-    res.status(500).json({ message: "Category deletion failed", error: error.message });
+    res
+      .status(500)
+      .json({ message: "Category deletion failed", error: error.message });
   }
 };
-
 
 exports.addItemToCategory = async (req, res) => {
   try {
@@ -138,12 +131,12 @@ exports.addItemToCategory = async (req, res) => {
       return res.status(400).json({ success: false, message: req.uploadError });
     }
 
-     const category = await Menu.findById(categoryId);
+    const category = await Menu.findById(categoryId);
     if (!category) {
       return res.status(404).json({ message: "Category not found" });
     }
 
-    console.log("category", category)
+    console.log("category", category);
 
     const filePath = req.files.image?.[0]?.path;
 
@@ -169,7 +162,9 @@ exports.addItemToCategory = async (req, res) => {
     return res.status(200).json({ success: true, data: newItem });
   } catch (error) {
     console.error("Add Item Error:", error);
-    return res.status(500).json({ success: false, message: "Something went wrong." });
+    return res
+      .status(500)
+      .json({ success: false, message: "Something went wrong." });
   }
 };
 
@@ -219,13 +214,12 @@ exports.updateItemById = async (req, res) => {
     await category.save();
 
     res.status(200).json({ message: "Item updated successfully", data: item });
-
   } catch (error) {
-    res.status(500).json({ message: "Item update failed", error: error.message });
+    res
+      .status(500)
+      .json({ message: "Item update failed", error: error.message });
   }
 };
-
-
 
 exports.deleteItemById = async (req, res) => {
   const { categoryId, itemId } = req.params;
@@ -241,37 +235,39 @@ exports.deleteItemById = async (req, res) => {
       return res.status(404).json({ message: "Item not found in category" });
     }
 
-
     const oldUrl = item.image;
-      const publicIdMatch = oldUrl.match(/\/([^/]+)\.[a-z]+$/i);
-      const publicId = publicIdMatch ? `menuItems/${publicIdMatch[1]}` : null;
+    const publicIdMatch = oldUrl.match(/\/([^/]+)\.[a-z]+$/i);
+    const publicId = publicIdMatch ? `menuItems/${publicIdMatch[1]}` : null;
 
-      if (publicId) {
-        await cloudinary.uploader.destroy(publicId);
-      }
+    if (publicId) {
+      await cloudinary.uploader.destroy(publicId);
+    }
 
-      
-    category.items = category.items.filter(i => i._id.toString() !== itemId);
+    category.items = category.items.filter((i) => i._id.toString() !== itemId);
     await category.save();
 
     res.status(200).json({ message: "Item deleted" });
   } catch (error) {
-    res.status(500).json({ message: "Item deletion failed", error: error.message });
+    res
+      .status(500)
+      .json({ message: "Item deletion failed", error: error.message });
   }
 };
-
 
 exports.getById = async (req, res) => {
   const { id } = req.params;
   try {
     const category = await Menu.findById(id);
-    if (category) return res.status(200).json({ type: "category", data: category });
+    if (category)
+      return res.status(200).json({ type: "category", data: category });
 
     const menus = await Menu.find();
     for (const menu of menus) {
       const item = menu.items.id(id);
       if (item) {
-        return res.status(200).json({ type: "item", data: item, categoryId: menu._id });
+        return res
+          .status(200)
+          .json({ type: "item", data: item, categoryId: menu._id });
       }
     }
 
@@ -285,17 +281,20 @@ exports.toggleCategory = async (req, res) => {
   try {
     const { categoryId } = req.params;
     const category = await Menu.findById(categoryId);
-    if (!category) return res.status(404).json({ message: "Category not found" });
+    if (!category)
+      return res.status(404).json({ message: "Category not found" });
 
     category.isEnabled = !category.isEnabled;
-    category.items.forEach(item => {
+    category.items.forEach((item) => {
       item.isEnabled = category.isEnabled;
     });
 
     await category.save();
     res.status(200).json({ message: "Category toggled", data: category });
   } catch (error) {
-    res.status(500).json({ message: "Error toggling category", error: error.message });
+    res
+      .status(500)
+      .json({ message: "Error toggling category", error: error.message });
   }
 };
 
@@ -303,7 +302,8 @@ exports.toggleItem = async (req, res) => {
   try {
     const { categoryId, itemId } = req.params;
     const category = await Menu.findById(categoryId);
-    if (!category) return res.status(404).json({ message: "Category not found" });
+    if (!category)
+      return res.status(404).json({ message: "Category not found" });
 
     const item = category.items.id(itemId);
     if (!item) return res.status(404).json({ message: "Item not found" });
@@ -313,6 +313,8 @@ exports.toggleItem = async (req, res) => {
 
     res.status(200).json({ message: "Item toggled", data: item });
   } catch (error) {
-    res.status(500).json({ message: "Error toggling item", error: error.message });
+    res
+      .status(500)
+      .json({ message: "Error toggling item", error: error.message });
   }
 };
