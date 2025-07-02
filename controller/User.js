@@ -39,6 +39,35 @@ exports.sendOTP = async (req, res) => {
   }
 };
 
+exports.sendLoginOTP = async (req, res) => {
+  const { phone } = req.body;
+  if (!phone) return res.status(400).json({ message: "Phone is required" });
+
+    const UserPhone = await User.findOne({phone});
+      if (!UserPhone) {
+      
+        return res.status(403).json({ message: "Phone Number Not registered" });
+      }
+
+
+  const formattedPhone = `+91${normalizePhone(phone)}`;
+
+  try {
+    const response = await axios.get(
+      `https://2factor.in/API/V1/${API_KEY}/SMS/${formattedPhone}/AUTOGEN`
+    );
+
+    if (response.data.Status !== "Success") {
+      return res.status(500).json({ message: "Failed to send OTP" });
+    }
+
+    otpSessions.set(normalizePhone(phone), response.data.Details);
+    res.json({ message: "OTP sent successfully" });
+  } catch (err) {
+    res.status(500).json({ message: "Error sending OTP", error: err.message });
+  }
+};
+
 exports.register = async (req, res) => {
   const { name, email, phone, otp } = req.body;
 
