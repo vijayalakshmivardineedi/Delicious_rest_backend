@@ -19,15 +19,11 @@ const storage = multer.diskStorage({
 
 const fileFilter = (req, file, cb) => {
   const allowedImageTypes = ["image/jpeg", "image/png"];
-
-  if (file.fieldname === "image") {
-    if (allowedImageTypes.includes(file.mimetype)) {
-      cb(null, true);
-    } else {
-      cb(new Error("Invalid image. Only JPG/PNG and under 1MB allowed."));
-    }
+  if (allowedImageTypes.includes(file.mimetype)) {
+    cb(null, true);
   } else {
-    cb(new Error("Unexpected file field."));
+    req.uploadError = "Only JPEG/PNG images allowed.";
+    cb(null, false);
   }
 };
 
@@ -35,7 +31,7 @@ const upload = multer({
   storage,
   fileFilter,
   limits: {
-    fileSize: 1024 * 1024,
+    fileSize: 5 * 1024 * 1024, // ✅ 5MB max
   },
 });
 

@@ -32,11 +32,9 @@ const uploadWithErrorHandler = (req, res, next) => {
 
     if (isPostMethod && !hasImage) {
       req.uploadError = req.uploadError || "Image file is required.";
-      console.log("Image field is required for POST but missing.");
     }
 
     if (hasImage) {
-      console.log("Image field received:", req.files.image[0].originalname);
     }
 
     next();

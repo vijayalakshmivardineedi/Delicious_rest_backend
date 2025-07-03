@@ -53,7 +53,8 @@ exports.updateCart = async (req, res) => {
 
 exports.deleteCart = async (req, res) => {
   try {
-    const { userId } = req.body;
+    const { userId } = req.params;
+    console.log(userId);
     if (!userId) {
       return res.status(400).json({ message: "userId is required" });
     }

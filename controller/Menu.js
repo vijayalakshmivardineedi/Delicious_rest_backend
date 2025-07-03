@@ -24,18 +24,29 @@ exports.getAllMenus = async (req, res) => {
 
 exports.createCategory = async (req, res) => {
   try {
-    if (req.uploadError)
+    if (req.uploadError) {
       return res.status(400).json({ message: req.uploadError });
+    }
 
     const { name, categoryType } = req.body;
-    if (!categoryType || !["Veg", "Non-Veg"].includes(categoryType)) {
+
+    if (!name)
+      return res.status(400).json({ message: "Category name is required" });
+
+    if (!["Veg", "Non-Veg"].includes(categoryType)) {
       return res.status(400).json({ message: "Invalid categoryType" });
     }
 
+    if (!req.files || !req.files.image || req.files.image.length === 0) {
+      return res.status(400).json({ message: "Image file is required" });
+    }
+
     const filePath = req.files.image[0].path;
+
     const result = await cloudinary.uploader.upload(filePath, {
       folder: "categories",
     });
+
     fs.unlinkSync(filePath);
 
     const newCategory = new Menu({
@@ -44,10 +55,12 @@ exports.createCategory = async (req, res) => {
       cateimage: result.secure_url,
       items: [],
     });
+
     await newCategory.save();
-    res.status(201).json(newCategory); // ✅ fix: return raw category
+    return res.status(201).json(newCategory);
   } catch (err) {
-    res
+    console.error("Create Category Error:", err);
+    return res
       .status(500)
       .json({ message: "Failed to create category", error: err.message });
   }
@@ -135,8 +148,6 @@ exports.addItemToCategory = async (req, res) => {
     if (!category) {
       return res.status(404).json({ message: "Category not found" });
     }
-
-    console.log("category", category);
 
     const filePath = req.files.image?.[0]?.path;
 
