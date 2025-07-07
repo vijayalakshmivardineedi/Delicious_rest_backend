@@ -1,7 +1,6 @@
 const Order = require("../model/Order");
 const User = require("../model/User");
 
-
 function generate4DigitOrderId() {
   return Math.floor(1000 + Math.random() * 9000).toString();
 }
@@ -11,7 +10,6 @@ async function isOrderIdUnique(orderId) {
   return !existing;
 }
 
-
 async function generateUniqueOrderId() {
   for (let i = 0; i < 5; i++) {
     const newId = generate4DigitOrderId();
@@ -19,7 +17,6 @@ async function generateUniqueOrderId() {
   }
   throw new Error("Failed to generate unique orderId, try again");
 }
-
 
 exports.createOrder = async (req, res) => {
   try {
@@ -34,18 +31,20 @@ exports.createOrder = async (req, res) => {
       total,
       paymentMethod,
       status,
-      cookingInstructions = "", 
+      cookingInstructions = "",
+      coupon, // Optional
     } = req.body;
 
+    // Fix: Use null/undefined check for number fields
     if (
       !userId ||
       !items ||
       !deliveryLocation ||
-      !subtotal ||
-      !deliveryFee ||
-      !taxes ||
-      !discount ||
-      !total ||
+      subtotal == null ||
+      deliveryFee == null ||
+      taxes == null ||
+      discount == null ||
+      total == null ||
       !paymentMethod ||
       !status
     ) {
@@ -54,7 +53,7 @@ exports.createOrder = async (req, res) => {
 
     const orderId = await generateUniqueOrderId();
 
-    const order = new Order({
+    const orderData = {
       userId,
       items,
       deliveryLocation,
@@ -67,37 +66,41 @@ exports.createOrder = async (req, res) => {
       cookingInstructions,
       paymentMethod,
       status,
-    });
+    };
 
+    // Conditionally include coupon if it exists
+    if (coupon) {
+      orderData.coupon = coupon;
+    }
+
+    const order = new Order(orderData);
     await order.save();
+
     res.status(200).json({ message: "Order placed successfully", order });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
 
-
 exports.getOrderById = async (req, res) => {
   try {
     const { orderId } = req.params;
     const orders = await Order.findById(orderId);
     if (!orders) return res.status(404).json({ message: "Order not found" });
-    const userId = orders.userId
+    const userId = orders.userId;
 
     const user = await User.findOne({ userId });
 
     const order = {
-orders,
-user
-    }
+      orders,
+      user,
+    };
 
     res.status(200).json(order);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
-
-
 exports.getOrderByUserId = async (req, res) => {
   try {
     const { userId } = req.params;
@@ -141,19 +144,19 @@ exports.getAllOrdersForAdmin = async (req, res) => {
       return res.status(404).json({ message: "No orders found" });
     }
 
-    const userIds = [...new Set(orders.map(order => order.userId))];
+    const userIds = [...new Set(orders.map((order) => order.userId))];
 
     const users = await User.find({ userId: { $in: userIds } });
 
     const userMap = {};
-    users.forEach(user => {
+    users.forEach((user) => {
       userMap[user.userId] = user;
     });
 
-    const ordersWithUsers = orders.map(order => {
+    const ordersWithUsers = orders.map((order) => {
       return {
         ...order._doc,
-        user: userMap[order.userId] || null
+        user: userMap[order.userId] || null,
       };
     });
 
@@ -171,8 +174,7 @@ exports.adminStatusUpdate = async (req, res) => {
 
     const order = await Order.findOne({ orderId: orderId });
 
-    if (!order)
-      return res.status(404).json({ message: "Order not found" });
+    if (!order) return res.status(404).json({ message: "Order not found" });
 
     if (order.status === "Cancelled")
       return res.status(400).json({ message: "Order already cancelled" });
@@ -208,7 +210,7 @@ exports.getTodaysOrders = async (req, res) => {
     const endOfDay = new Date();
     endOfDay.setHours(23, 59, 59, 999);
 
-    const todaysOrders = orders.filter(order => {
+    const todaysOrders = orders.filter((order) => {
       const createdAt = new Date(order.createdAt);
       return createdAt >= startOfDay && createdAt <= endOfDay;
     });
@@ -223,7 +225,7 @@ exports.getTodaysOrders = async (req, res) => {
 
     const pendingStatuses = ["Picked Up", "Approved", "Preparing", "Ready"];
 
-    todaysOrders.forEach(order => {
+    todaysOrders.forEach((order) => {
       const status = order.status;
       if (countByStatus[status] !== undefined) {
         countByStatus[status]++;
@@ -249,7 +251,9 @@ exports.getOrdersByDates = async (req, res) => {
     const { fromDate, toDate } = req.body;
 
     if (!fromDate || !toDate) {
-      return res.status(400).json({ message: "fromDate and toDate are required" });
+      return res
+        .status(400)
+        .json({ message: "fromDate and toDate are required" });
     }
 
     const from = new Date(fromDate);
@@ -264,7 +268,7 @@ exports.getOrdersByDates = async (req, res) => {
       return res.status(404).json({ message: "No orders found" });
     }
 
-    const filteredOrders = orders.filter(order => {
+    const filteredOrders = orders.filter((order) => {
       const createdAt = new Date(order.createdAt);
       return createdAt >= from && createdAt <= to;
     });
@@ -279,7 +283,7 @@ exports.getOrdersByDates = async (req, res) => {
 
     const pendingStatuses = ["Picked Up", "Approved", "Preparing", "Ready"];
 
-    filteredOrders.forEach(order => {
+    filteredOrders.forEach((order) => {
       const status = order.status;
       if (countByStatus[status] !== undefined) {
         countByStatus[status]++;
@@ -299,5 +303,3 @@ exports.getOrdersByDates = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
-
-
