@@ -35,7 +35,6 @@ exports.createOrder = async (req, res) => {
       coupon, // Optional
     } = req.body;
 
-    // Fix: Use null/undefined check for number fields
     if (
       !userId ||
       !items ||
@@ -50,11 +49,16 @@ exports.createOrder = async (req, res) => {
     ) {
       return res.status(400).json({ error: "Missing required fields" });
     }
+    console.log("yeswanth", userId);
+    let parsedUserId = userId;
+    if (typeof userId === "string") {
+      parsedUserId = userId.replace(/^"|"$/g, "");
+    }
 
     const orderId = await generateUniqueOrderId();
 
     const orderData = {
-      userId,
+      userId: parsedUserId,
       items,
       deliveryLocation,
       subtotal,
@@ -101,19 +105,24 @@ exports.getOrderById = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
 exports.getOrderByUserId = async (req, res) => {
   try {
     const { userId } = req.params;
-    const orders = await Order.find({ userId: userId });
+    // if (typeof userId === "string") {
+    //   userId = userId.replace(/^"|"$/g, "");
+    // }
+    console.log("userId", userId);
+    const orders = await Order.find({ userId });
     if (!orders || orders.length === 0)
       return res.status(404).json({ message: "No orders found for user" });
     res.status(200).json(orders);
   } catch (error) {
+    console.log("error", error);
     res.status(500).json({ error: error.message });
   }
 };
 
-// ✅ Cancel Order by User
 exports.cancleByUser = async (req, res) => {
   try {
     const { userId, orderId } = req.params;
