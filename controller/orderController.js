@@ -108,20 +108,28 @@ exports.getOrderById = async (req, res) => {
 
 exports.getOrderByUserId = async (req, res) => {
   try {
-    const { userId } = req.params;
-    // if (typeof userId === "string") {
-    //   userId = userId.replace(/^"|"$/g, "");
-    // }
-    console.log("userId", userId);
+    let { userId } = req.params;
+
+    // Clean up if userId comes with extra quotes like "\"3138\""
+    if (typeof userId === "string") {
+      userId = userId.replace(/^"|"$/g, "");
+    }
+
+    console.log("Requested userId:", userId);
+
     const orders = await Order.find({ userId });
-    if (!orders || orders.length === 0)
+
+    if (!orders || orders.length === 0) {
       return res.status(404).json({ message: "No orders found for user" });
+    }
+
     res.status(200).json(orders);
   } catch (error) {
-    console.log("error", error);
+    console.error("Error fetching orders:", error);
     res.status(500).json({ error: error.message });
   }
 };
+
 
 exports.cancleByUser = async (req, res) => {
   try {
